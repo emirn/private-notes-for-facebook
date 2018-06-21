@@ -1,0 +1,59 @@
+.notes_update_btn { 
+  background-color: red;
+//    padding: 6px 150px;
+  border-radius: 3px;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+  display:inline-block;
+}
+
+.notes_status { 
+//  background-color: red;
+  padding: 2px 2px;
+//  border-radius: 3px;
+  font-size: 8px;
+  color: gray;
+  display:inline-block;
+}
+
+
+.notes_area_profile { 
+  width: 99%px;!important;
+  background-color: #FFFFE0;!important;    
+  border: 1px solid black;!important;
+  font-size: 14px;!important;
+  color: black;!important;
+  display:inline-block;!important;
+  width: 95%;
+  height: 150px; 
+}
+
+[tooltip]:before {
+  /* needed - do not touch */
+  content: attr(tooltip);
+  position: absolute;
+  opacity: 0;
+  
+  /* customizable */
+  transition: all 0.15s ease;
+  padding: 10px;
+  color: #333;
+  border-radius: 10px;
+  box-shadow: 2px 2px 1px silver;    
+}
+
+[tooltip]:hover:before {
+  /* needed - do not touch */
+  opacity: 1;
+  
+  /* customizable */
+  background: #FFFFE0;
+  margin-top: -50px;
+  margin-left: 20px;    
+}
+
+[tooltip]:not([tooltip-persistent]):before {
+  pointer-events: none;
+}
+

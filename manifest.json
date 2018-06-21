@@ -1,0 +1,40 @@
+{
+  "manifest_version": 2,
+
+  "name": "Private Notes for Facebook",
+  "version": "0.1.3",
+  "description": "Write and see private notes about profiles on Facebook. View notes or export to CSV. Notes are stored on your computer ONLY! ",
+
+  "author": "Evgenii Mironichev https://github.com/emirn",
+
+  "icons": { 
+    "16": "icon16.png",
+    "48": "icon48.png",
+   "128": "icon128.png" 
+  },  
+
+  "permissions": [
+          "storage",
+          "background",
+          "tabs", "*://*.facebook.com/*", 
+          "activeTab"          
+        ],  
+
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+
+  "content_scripts": [{
+    "matches": ["https://*.facebook.com/*", "https://www.facebook.com/*" ],
+    "all_frames": true,
+    "css": ["styles.css"],
+    "js": ["content.js"],
+    "run_at":  "document_idle"
+  }],
+
+  "browser_action": {
+    "default_popup": "popup.html"
+  }  
+
+}
