@@ -1,5 +1,10 @@
 # Private Notes for Facebook - Chrome Extension
 
+## Add To Chrome Browser
+
+User this link to add plugin to your Chrome Browser
+https://chrome.google.com/webstore/detail/private-notes-for-faceboo/kaanknncpllnfglggklkilmmpiccdfem
+
 ## Purpose
 
 Make it easier to store small notes about your connections on Facebook.
