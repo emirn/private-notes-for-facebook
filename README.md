@@ -2,7 +2,8 @@
 
 ## Add To Chrome Browser
 
-User this link to add plugin to your Chrome Browser
+User this link to plugin in Google Chrome Store to add plugin to your browser:
+
 https://chrome.google.com/webstore/detail/private-notes-for-faceboo/kaanknncpllnfglggklkilmmpiccdfem
 
 ## Purpose
