@@ -1,6 +1,6 @@
 function writeLog(msg) {
 
-  const IS_PRODUCTION = false;
+  const IS_PRODUCTION = true;
 
   if (IS_PRODUCTION)
     return;
@@ -19,6 +19,7 @@ function findProfilesAll(callbackFunc) {
   chrome.storage.local.get('profiles', function (data) {
 
     if (data == undefined || data.profiles == undefined || data.profiles.length == undefined || data.profiles.length == 0) {
+      writeLog('writing default data because no data found');
       data = {
         "profiles": '[\
           {"twitter": "emironic", "twitterName": "Evgenii Mironic", "notes": "software developer, tech entrepreneur, maker of Private Notes extension for Facebook."}, \
@@ -31,7 +32,7 @@ function findProfilesAll(callbackFunc) {
 
     if (allProfiles) {; // writeLog('all profiles loaded);
     } else {
-      alert('Error reading data');
+      alert('Private Notes Plugin: Error reading data');
     }
 
     callbackFunc(allProfiles);
@@ -215,7 +216,6 @@ function updateNotes() {
     var profileType = getProfileType();
 
     if (profileType == -1){
-      alert('Private Notes: can not extract info about profile on Facebook or Twitter');
       return -1;
     }
     // clean
@@ -253,6 +253,9 @@ function updateNotes() {
         }
       }
     }
+    else {
+      return;
+    }
 
     // update notes for this profile
 
@@ -271,6 +274,7 @@ function getProfileType()
   profile_matches = (/https:\/\/(www.)?facebook\.com/ig).exec(window.location.href); 
   if (profile_matches && profile_matches.length > 1) return 1;
 
+  writeLog('Private Notes: can not extract info about profile on Facebook or Twitter');
   return -1;
 }
 
@@ -326,6 +330,9 @@ function initExtension() {
 
   var profileType = getProfileType();
 
+  if (profileType == -1)
+    return;
+
   if (profileType == 0) // twitter
   {
     info_section = document.getElementsByClassName('ProfileHeaderCard-bio');
@@ -363,6 +370,9 @@ function initExtension() {
       writeLog('facebook profile block not detected');      
       return; // not found
     }
+  }
+  else {
+    writeLog
   }
 
   var notes_value = document.createElement('textarea');
@@ -418,7 +428,7 @@ const DELAY_TIME = 1000;
 
 // listening for updates from background
 chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
-  //alert(msg);
+
   writeLog("RECEIVED msg:" + msg);
   if (msg === 'load-completed') {
     setTimeout(function () {
@@ -430,7 +440,7 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
 
 // listening for updates from background - Adding notes to profile links
 chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
-  //alert(msg);
+
   writeLog("RECEIVED msg (second listener for ADDING LINKS):" + msg);
   if (msg === 'load-completed') {
     setTimeout(function () {

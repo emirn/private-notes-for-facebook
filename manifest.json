@@ -2,7 +2,7 @@
   "manifest_version": 2,
 
   "name": "Private Notes for Twitter and Facebook",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Write private notes about Twitter or Facebook profiles. View or export to CSV. Notes are stored on your computer only.",
 
   "author": "Evgenii Mironichev https://github.com/emirn",
