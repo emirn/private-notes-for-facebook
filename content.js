@@ -1,6 +1,6 @@
 function writeLog(msg) {
 
-  const IS_PRODUCTION = true;
+  const IS_PRODUCTION = false;
 
   if (IS_PRODUCTION)
     return;
@@ -20,7 +20,10 @@ function findProfilesAll(callbackFunc) {
 
     if (data == undefined || data.profiles == undefined || data.profiles.length == undefined || data.profiles.length == 0) {
       data = {
-        "profiles": '[{"facebook": "evg.mmi", "facebookName": "Evgenii Mironichev", "notes": "software developer, tech entrepreneur, maker of Private Notes extension for Facebook."}]'
+        "profiles": '[\
+          {"twitter": "emironic", "twitterName": "Evgenii Mironic", "notes": "software developer, tech entrepreneur, maker of Private Notes extension for Facebook."}, \
+          {"facebook": "evg.mmi", "facebookName": "Evgenii Mironichev", "notes": "software developer, tech entrepreneur, maker of Private Notes extension for Facebook."}\
+        ]'
       };
     }
 
@@ -36,10 +39,10 @@ function findProfilesAll(callbackFunc) {
   });
 }
 
-function findProfileByFacebookId(profileId, profiles) {
+function findProfileById(profileId, profileType, profiles) {
   if (profiles) {
 
-    var index = findProfileIndexByFacebookId(profileId, profiles);
+    var index = findProfileIndexById(profileId, profileType, profiles);
 
     if (index > -1)
       return profiles[index];
@@ -48,10 +51,13 @@ function findProfileByFacebookId(profileId, profiles) {
     return null;
 }
 
-function findProfileIndexByFacebookId(profileId, profiles) {
+function findProfileIndexById(profileId, profileType, profiles) {
   if (profiles) {
     var index = profiles.findIndex(function (profile) {
-      return profile.facebook && profile.facebook == profileId;
+      if (profileType == 0)
+        return profile.twitter && profile.twitter == profileId;
+      else if (profileType == 1)
+        return profile.facebook && profile.facebook == profileId;
     });
 
     return index;
@@ -59,17 +65,27 @@ function findProfileIndexByFacebookId(profileId, profiles) {
     return -1;
 }
 
-function updateProfileByFacebookId(profileId, newName, newNotes) {
+function updateProfileById(profileId, profileType, newName, newNotes) {
 
   updateNotesStatus('saving notes..');
+
   var profiles = findProfilesAll(function (allProfiles) {
 
-    var index = findProfileIndexByFacebookId(profileId, allProfiles);
+    var index = findProfileIndexById(profileId, profileType, allProfiles);
     if (index > -1) {
 
-      // update name
-      if (newName && newName != "")
-        allProfiles[index].facebookName = newName;
+      if (profileType == 0)
+      {
+        // update facebook name
+          if (newName && newName != "")
+            allProfiles[index].twitterName = newName;
+      }
+        else if (profileType == 1)
+      {
+      // update facebook name
+        if (newName && newName != "")
+          allProfiles[index].facebookName = newName;
+      }
 
       // update 
       allProfiles[index].notes = newNotes;
@@ -78,12 +94,25 @@ function updateProfileByFacebookId(profileId, newName, newNotes) {
       if (newName && newName != "")
         newName = profileId;
       // update notes
-      var newP = {
-        'facebook': profileId,
-        'facebookNam': newName,
+      var newP = null;
+      if (profileType == 0) // twitter
+      {
+       newP = {
+        'twitter': profileId,
+        'twitterName': newName,
         'notes': newNotes,
         'updatedAt': new Date()
-      };
+        };
+      } 
+      else if (profileType == 1) // facebook
+      {
+        newP = {
+          'facebook': profileId,
+          'facebookName': newName,
+          'notes': newNotes,
+          'updatedAt': new Date()
+          };  
+      }
       allProfiles[allProfiles.length] = newP;
     }
 
@@ -98,7 +127,7 @@ function updateProfileByFacebookId(profileId, newName, newNotes) {
     }, function () {
 
       updateNotesStatus('notes saved ok');
-      writeLog(allProfiles)
+      writeLog(JSON.stringify(allProfiles));
       return true;
 
 
@@ -110,11 +139,12 @@ function updateProfileByFacebookId(profileId, newName, newNotes) {
 }
 
 
-function findProfile(profileId, callbackFunc) {
+function findProfile(profileId, profileType, callbackFunc) {
 
   findProfilesAll(function (allProfiles) {
 
-    var profile_info = findProfileByFacebookId(profileId, allProfiles);
+    var profile_info = null;
+    profile_info = findProfileById(profileId, profileType, allProfiles);
 
     //writeLog('PRIVATE PROFILE LOADED:  ' + profileId + ' loaded: ' + JSON.stringify(profile_info));              
 
@@ -182,47 +212,92 @@ function updateNotes() {
   if (notes_value) {
     val = notes_value.value;
     var profileId = getCurrentProfileId();
+    var profileType = getProfileType();
+
+    if (profileType == -1){
+      alert('Private Notes: can not extract info about profile on Facebook or Twitter');
+      return -1;
+    }
     // clean
     val = cleanString(val);
 
     var allLinks = document.querySelectorAll("[href*='" + profileId + "']");
 
     var name = null;
-    for (var elem of allLinks) {
-      if (elem.attributes &&
-        (
-          (elem.attributes.class && elem.attributes.class.value == 'profileLink') ||
-          (elem.attributes.class && elem.attributes.class.value == '_2nlw _2nlv')
-        )
-      ) {
-        name = cleanString(elem.innerText);
-        break;
+
+    if (profileType == 0) // twitter
+    {
+      for (var elem of allLinks) {
+        if (elem.attributes &&
+          (
+            ( elem.attributes.class && elem.attributes.class.value.indexOf('ProfileHeaderCard-nameLink') > -1 )
+          )
+        ) {
+          name = cleanString(elem.innerText);
+          break;
+        }
+      }
+
+    }
+    else if (profileType == 1) // facebook
+    {
+      for (var elem of allLinks) {
+        if (elem.attributes &&
+          (
+            ( elem.attributes.class && elem.attributes.class.value.indexOf('profileLink') > -1) ||
+            (elem.attributes.class && elem.attributes.class.value.indexOf('_2nlw _2nlv') > -1)
+          )
+        ) {
+          name = cleanString(elem.innerText);
+          break;
+        }
       }
     }
 
     // update notes for this profile
 
-    updateProfileByFacebookId(profileId, name, val);
+    updateProfileById(profileId, profileType, name, val);
   } else
     writeLog('PRIVATE PROFILE: Can not find notes on the page! SAVE your UPDATED NOTES! Then reload the page and try again');
 
+}
+
+// returns 1 = twitter, 0 = facebook
+function getProfileType()
+{
+  var profile_matches = (/https:\/\/(www.)?twitter\.com/ig).exec(window.location.href); 
+  if (profile_matches && profile_matches.length > 1) return 0;
+  
+  profile_matches = (/https:\/\/(www.)?facebook\.com/ig).exec(window.location.href); 
+  if (profile_matches && profile_matches.length > 1) return 1;
+
+  return -1;
 }
 
 function getCurrentProfileId() {
   var url = window.location.href;
   var profileId = null;
 
-  // try to extract profile id first , for example 
-  // https://www.facebook.com/profile.php?id=123456890123&hc_ref=AABCDFEF
-  var profile_matches = (/facebook\.com\/profile.php\?id=([0-9]+)[\&$\?]*/ig).exec(url);
+  // TWITTER
+  // if not found then try to extract profile nickname
+  // https://www.twitter.com/some.nicknameuser98002?sdkjkjid=23e  
+  var profile_matches = (/twitter\.com\/([0-9a-zA-Z\.]+)[$\?]*/ig).exec(window.location.href); // getting username out of link
   if (profile_matches && profile_matches.length > 1) {
     profileId = profile_matches[1];
-  } else {
-    // if not found then try to extract profile nickname
-    // https://www.facebook.com/some.nicknameuser98002?sdkjkjid=23e  
-    profile_matches = (/facebook\.com\/([0-9a-zA-Z\.]+)[$\?]*/ig).exec(window.location.href); // getting username out of link
+  }
+  else {
+    // try to extract profile id first , for example 
+    // https://www.facebook.com/profile.php?id=123456890123&hc_ref=AABCDFEF
+    var profile_matches = (/facebook\.com\/profile.php\?id=([0-9]+)[\&$\?]*/ig).exec(url);
     if (profile_matches && profile_matches.length > 1) {
       profileId = profile_matches[1];
+    } else {
+      // if not found then try to extract profile nickname
+      // https://www.facebook.com/some.nicknameuser98002?sdkjkjid=23e  
+      profile_matches = (/facebook\.com\/([0-9a-zA-Z\.]+)[$\?]*/ig).exec(window.location.href); // getting username out of link
+      if (profile_matches && profile_matches.length > 1) {
+        profileId = profile_matches[1];
+      }
     }
   }
 
@@ -247,63 +322,92 @@ function initExtension() {
   }
 
   var info_section = null;
+  var notes_block = null;
 
-  info_section = document.getElementsByClassName('_1vc-');
+  var profileType = getProfileType();
 
-  if (info_section && info_section.length > 0 && info_section[0].childNodes && info_section[0].childNodes.length > 0) {
+  if (profileType == 0) // twitter
+  {
+    info_section = document.getElementsByClassName('ProfileHeaderCard-bio');
+    // insert block into twitter profile
+    if (info_section && info_section.length > 0) {
 
-    var notes_block = document.createElement('div');
-    notes_block.setAttribute('id', 'notes_block');
-    //notes_block.setAttribute('class', 'profile_notes_area');
+      var notes_block = document.createElement('div');
+      notes_block.setAttribute('id', 'notes_block');
+      //notes_block.setAttribute('class', 'profile_notes_area');  
 
-    info_section[0].insertBefore(notes_block, info_section[0].childNodes[0]);
-
-    var notes_value = document.createElement('textarea');
-    notes_value.setAttribute('id', 'notes_profile_value');
-    notes_value.setAttribute('class', 'notes_area_profile');
-    notes_value.setAttribute('placeholder', 'enter some private notes about this person');
-    notes_block.appendChild(notes_value);
-
-    var br = document.createElement("br");
-    notes_block.appendChild(br);
-
-    // button - commented out as now saves automatically on any change
-    /*
-    var update_notes = document.createElement('span');
-    update_notes.setAttribute('id','notes_update_btn');
-    update_notes.setAttribute('class', 'notes_update_btn');
-    update_notes.innerText = 'Update';
-    notes_block.appendChild(update_notes);
-    */
-
-    var notes_status = document.createElement('span');
-    notes_status.setAttribute('id', 'notes_status');
-    notes_status.setAttribute('class', 'notes_status');
-    notes_status.innerText = '';
-    notes_block.appendChild(notes_status);
+      info_section[0].parentNode.insertBefore(notes_block, info_section[0]);
+    }
+    else {
+      writeLog('twitter profile block not detected');
+      return; // not found
+    }
 
 
-    findProfile(getCurrentProfileId(), function (profile_info) {
+  }
+  else if (profileType == 1) // facebook
+  {
 
-      if (profile_info) {
-        //writeLog('loaded profile_info:' + JSON.stringify(profile_info));
-        var notes_val = profile_info.notes;
-        if (notes_val) {
-          notes_value.innerText = notes_val;
-          writeLog('notes is set to ' + notes_val);
-        }
+    info_section = document.getElementsByClassName('_1vc-');
+
+    // insert block into facebook profile
+    if (info_section && info_section.length > 0 && info_section[0].childNodes && info_section[0].childNodes.length > 0) {
+
+      notes_block = document.createElement('div');
+      notes_block.setAttribute('id', 'notes_block');
+      //notes_block.setAttribute('class', 'profile_notes_area');  
+
+      info_section[0].insertBefore(notes_block, info_section[0].childNodes[0]);
+    }
+    else {
+      writeLog('facebook profile block not detected');      
+      return; // not found
+    }
+  }
+
+  var notes_value = document.createElement('textarea');
+  notes_value.setAttribute('id', 'notes_profile_value');
+  notes_value.setAttribute('class', 'notes_area_profile');
+  notes_value.setAttribute('placeholder', 'enter some private notes about this person');
+  notes_block.appendChild(notes_value);
+
+  var br = document.createElement("br");
+  notes_block.appendChild(br);
+
+  // button - commented out as now saves automatically on any change
+  /*
+  var update_notes = document.createElement('span');
+  update_notes.setAttribute('id','notes_update_btn');
+  update_notes.setAttribute('class', 'notes_update_btn');
+  update_notes.innerText = 'Update';
+  notes_block.appendChild(update_notes);
+  */
+
+  var notes_status = document.createElement('span');
+  notes_status.setAttribute('id', 'notes_status');
+  notes_status.setAttribute('class', 'notes_status');
+  notes_status.innerText = '';
+  notes_block.appendChild(notes_status);
+
+
+  findProfile(getCurrentProfileId(), profileType, function (profile_info) {
+
+    if (profile_info) {
+      //writeLog('loaded profile_info:' + JSON.stringify(profile_info));
+      var notes_val = profile_info.notes;
+      if (notes_val) {
+        notes_value.innerText = notes_val;
+        writeLog('notes is set to ' + notes_val);
       }
+    }
 
-      //document.getElementById('notes_update_btn').onclick = updateNotes;
+    //document.getElementById('notes_update_btn').onclick = updateNotes;
 
-      // save on key press or change inside notes
-      document.getElementById('notes_profile_value').oninput = updateNotes;
-      document.getElementById('notes_profile_value').onpropertychange = updateNotes; // for IE        
-    });
+    // save on key press or change inside notes
+    document.getElementById('notes_profile_value').oninput = updateNotes;
+    document.getElementById('notes_profile_value').onpropertychange = updateNotes; // for IE        
+  });
 
-
-  } else // if not a main page profile!
-  ;
 
 
 }

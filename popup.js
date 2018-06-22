@@ -33,7 +33,11 @@ var encodeHtmlEntity = function(str) {
     for (var i=str.length-1;i>=0;i--) {
       buf.unshift(['&#', str[i].charCodeAt(), ';'].join(''));
     }
-    return buf.join('');
+
+    var output =  buf.join('');
+
+    output = output.replace("\r\n", "<br/>").replace("\n", "<br/>").replace("\r", "<br/>");
+    return output;
   };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -71,7 +75,12 @@ function generateContent()
         if (data == undefined || data.profiles == undefined || data.profiles.length == undefined || data.profiles.length == 0 )
         {
             writeLog('no data yet, generating default data');
-            data = {"profiles": '[{"facebook": "evg.mmi", "facebookName": "Evgenii Mironichev", "notes": "software developer, tech entrepreneur, maker of Private Notes extension for Facebook."}]'};
+            data = {
+                "profiles": '[\
+                  {"twitter": "emironic", "twitterName": "Evgenii Mironic", "notes": "software developer, tech entrepreneur, maker of Private Notes extension for Facebook."}, \
+                  {"facebook": "evg.mmi", "facebookName": "Evgenii Mironichev", "notes": "software developer, tech entrepreneur, maker of Private Notes extension for Facebook."}\
+                ]'
+            };
         }   
 
         var allProfiles = JSON.parse(data['profiles']);
@@ -79,8 +88,6 @@ function generateContent()
         writeLog('generating CSV export..');
         var link = document.getElementById('exportCSV');
         link.text = "please wait...";
-
-
 
         allProfiles.sort(function(a,b){
             var aTime = 0;
@@ -95,23 +102,38 @@ function generateContent()
         for (var i = allProfilesLength; i--; i >= 0) {
             var profile = allProfiles[i];
             input = profile.notes.trim();
-            input = input.replace("\n", ' ').replace("\r", ' ').replace("\t", ' ');          
 
-            var name = profile.facebook;
+            // facebook
+            var facebook = '';
+            if (profile.facebook)
+                facebook = 'https://facebook.com/'  + profile.facebook;
+
+            var facebookName = '';
             if (profile.facebookName != undefined && profile.facebookName != "")
-                name = profile.facebookName;
+                facebookName = profile.facebookName;
+            
+            // twitter
+            var twitter = '';
+            if (profile.twitter)
+                twitter = 'https://twitter.com/' + profile.twitter;
+    
+            var twitterName = '';
+
+            if (profile.twitterName != undefined && profile.twitterName != "")
+                twitterName = profile.twitterName;
+    
 
             var updatedAt = '';
             if (profile.updatedAt) updatedAt = dateToString(new Date(profile.updatedAt));
 
-            outputCSV = outputCSV + '"https://facebook.com/' + profile.facebook + '","' + name + '","' + input + '","'+  updatedAt + "\"\r\n";
+            outputCSV = outputCSV + '"' + twitter + '","' +  twitterName + '","' + facebook + '","' + facebookName + '","' + input + '","'+  updatedAt + "\"\r\n";
         };
 
         var currentDate = dateToString(new Date());
         
         link.textContent = "Export as CSV";
-        link.download = "PrivateNotesForFacebook-" + currentDate + ".csv";        
-        link.href = "data:text/csv,Facebook,FacebookName,Notes,UpdatedAt\n" + outputCSV;
+        link.download = "PrivateNotesForTwitterAndFacebook-" + currentDate + ".csv";        
+        link.href = "data:text/csv,Twitter,TwitterName,Facebook,FacebookName,Notes,UpdatedAt\n" + outputCSV;
         link.text = "Export as CSV..";    
     
 
@@ -124,17 +146,19 @@ function generateContent()
         for (var i = allProfilesLength; i--; i>= 0) {
             var profile = allProfiles[i];
 
-            var name = profile.facebook;
-
-            // if defined and not empty
-            if (profile.facebookName != undefined && profile.facebookName != "")
-                name = profile.facebookName;
-
             var updatedAt = '';
             if (profile.updatedAt) updatedAt = dateToString(new Date(profile.updatedAt));
-    
-            tableHTML = tableHTML + '<tr><td><a title="' + updatedAt + '" target="_blank" href="https://facebook.com/' + profile.facebook + '">' + name + "</a></td><td>" + 
-            encodeHtmlEntity(profile.notes) + "</td></tr>\n";
+
+            if (profile.facebook){
+                tableHTML = tableHTML + '<tr><td>';
+                tableHTML = tableHTML + '<a title="' + updatedAt + '" target="_blank" href="https://facebook.com/' + profile.facebook + '"><i class="fa fab fa-facebook"></i> ' + profile.facebookName + "</a>";
+            }
+            if (profile.twitter){
+                tableHTML = tableHTML + '<tr><td>';                
+                tableHTML = tableHTML + '<a title="' + updatedAt + '" target="_blank" href="https://twitter.com/' + profile.twitter + '"><i class="fa fab fa-twitter"></i> ' + profile.twitterName + "</a>";
+            }
+            
+            tableHTML = tableHTML + "</td><td>" + encodeHtmlEntity(profile.notes) + "</td></tr>\n";
             //encodeHtmlEntity(profile.notes) + "</td><td><span id='profileRemove" + i + "'> X </span></td></tr>\n";
 
         };
