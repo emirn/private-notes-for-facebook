@@ -1,5 +1,8 @@
 # Private Notes for Twitter and Facebook - Chrome Extension
 
+# on Product Hunt
+https://www.producthunt.com/posts/private-notes-for-twitter-and-facebook
+
 ## Add To Chrome Browser
 
 User this link to plugin in Google Chrome Store to add plugin to your browser:
