@@ -1,3 +1,7 @@
+# Postmortem
+
+https://medium.com/@emironic/short-life-and-death-of-chrome-plugin-for-linkedin-2bf4431e147a
+
 # Private Notes for Twitter and Facebook - Chrome Extension
 
 # on Product Hunt
